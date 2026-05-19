@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agrotech Calculus: Oil Palm FFB Growth Rate</title>
+    <!-- Tailwind CSS for clean, modern styling -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Chart.js for smooth animations and plotting -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #115e59 0%, #064e3b 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800">
+
+    <!-- Header Section -->
+    <header class="gradient-bg text-white py-8 px-4 shadow-md text-center">
+        <h1 class="text-3xl font-bold tracking-tight">Derivatives in Agrotechnology</h1>
+        <p class="text-emerald-200 mt-2 text-lg">Optimizing Oil Palm Fresh Fruit Bunch (FFB) Harvest Windows</p>
+    </header>
+
+    <main class="max-w-5xl mx-auto p-4 md:p-8 space-y-8">
+        
+        <!-- Scenario & Explanation Section -->
+        <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h2 class="text-2xl font-semibold text-emerald-800 mb-4">The Bioscience Problem</h2>
+            <p class="mb-4 leading-relaxed">
+                In Malaysian oil palm agriculture, tracking the mass accumulation of **Fresh Fruit Bunches (FFB)** is vital for predicting yield and scheduling harvests. FFB growth follows a sigmoidal (S-shaped) curve. Early on, cellular division is slow; mid-season sees a massive surge in oil synthesis and weight gain; finally, growth levels off as the fruit matures.
+            </p>
+            <p class="mb-4 leading-relaxed">
+                By applying the <strong>first derivative $f'(x)$</strong> to the growth function $f(x)$, we calculate the <em>instantaneous growth rate</em> (kg/day). Identifying the peak of the derivative tells agrotechnologists exactly when the fruit is accumulating mass the fastest, mapping directly to peak nutritional and oil-filling stages.
+            </p>
+            
+            <div class="bg-emerald-50 border-l-4 border-emerald-600 p-4 rounded-r-lg my-4">
+                <h3 class="font-bold text-emerald-900 mb-2">Mathematical Modeling:</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm md:text-base">
+                    <div>
+                        <span class="block text-xs font-semibold text-emerald-700 uppercase">Growth Function (Logistic)</span>
+                        <code class="text-emerald-900 font-mono font-bold">f(x) = L / (1 + e^(-k(x - x0)))</code>
+                        <p class="text-xs text-gray-600 mt-1">Models total FFB weight (kg) over days ($x$).</p>
+                    </div>
+                    <div>
+                        <span class="block text-xs font-semibold text-emerald-700 uppercase">First Derivative (Growth Rate)</span>
+                        <code class="text-emerald-900 font-mono font-bold">f'(x) = k · f(x) · (1 - f(x)/L)</code>
+                        <p class="text-xs text-gray-600 mt-1">Models the rate of weight gain (kg/day) at day ($x$).</p>
+                    </div>
+                </div>
+            </div>
+            
+            <p class="text-xs text-gray-500 italic">
+                *Parameters based on realistic Malaysian oil palm agronomy profiles (e.g., MPOB / Sime Darby growth cycle datasets mapping a standard ~150-day anthesis-to-maturity period where max weight $L \approx 25\text{ kg}$).
+            </p>
+        </section>
+
+        <!-- Interactive Chart Section -->
+        <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left: Chart Display -->
+            <div class="lg:col-span-2 space-y-2">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-gray-800">FFB Development Curve</h2>
+                    <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Click anywhere on the plot lines to analyze</span>
+                </div>
+                <div class="relative h-80 md:h-96 w-full">
+                    <canvas id="growthChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Right: Dynamic Feedback Panel -->
+            <div class="bg-gray-50 p-5 rounded-xl border border-gray-200 flex flex-col justify-between">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-700 border-b pb-2 mb-4">Calculus Analysis Panel</h3>
+                    
+                    <div id="instructionPrompt" class="text-gray-500 text-center py-12 italic text-sm">
+                        Click a data point on the chart to pass a tangent line and calculate the exact derivative.
+                    </div>
+
+                    <div id="dataMetrics" class="hidden space-y-4">
+                        <div>
+                            <span class="text-xs text-gray-500 block uppercase font-bold tracking-wider">Time Since Anthesis</span>
+                            <div class="text-2xl font-extrabold text-slate-800" id="metricDay">--</div>
+                        </div>
+                        <hr class="border-gray-200">
+                        <div>
+                            <span class="text-xs text-emerald-600 block uppercase font-bold tracking-wider">Current Weight $f(x)$</span>
+                            <div class="text-xl font-bold text-emerald-700" id="metricWeight">--</div>
+                        </div>
+                        <hr class="border-gray-200">
+                        <div>
+                            <span class="text-xs text-blue-600 block uppercase font-bold tracking-wider">Instantaneous Growth Rate $f'(x)$</span>
+                            <div class="text-xl font-bold text-blue-700" id="metricRate">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Layman Explanation Box -->
+                <div id="laymanExplanation" class="hidden mt-4 p-3 bg-white rounded-lg border border-emerald-100 text-sm shadow-inner">
+                    <span class="block font-semibold text-emerald-800 mb-1">🌱 What this means:</span>
+                    <p id="explanationText" class="text-gray-600 leading-snug"></p>
+                </div>
+            </div>
+        </section>
+        
+    </main>
+
+    <footer class="text-center py-8 text-xs text-gray-400 border-t border-gray-200 mt-12">
+        Agrotechnology Calculus Sandbox • Created for SFA: Agrotech Students • Driven by Chart.js
+    </footer>
+
+    <script>
+        // --- CONSTANTS & BIOLOGICAL PARAMETERS ---
+        const L = 25;      // Carrying capacity (Max weight of bunch in kg)
+        const k = 0.06;    // Growth rate coefficient 
+        const x0 = 75;     // Inflection point (Day of fastest growth, mid-point of 150 days)
+
+        // --- MATH FUNCTIONS ---
+        // Logistic growth function: f(x)
+        function f(x) {
+            return L / (1 + Math.exp(-k * (x - x0)));
+        }
+
+        // Analytical derivative: f'(x)
+        function fPrime(x) {
+            const fx = f(x);
+            return k * fx * (1 - (fx / L));
+        }
+
+        // --- DATA GENERATION ---
+        const days = [];
+        const weightData = [];
+        const rateData = [];
+
+        for (let day = 0; day <= 150; day += 5) {
+            days.push(day);
+            weightData.push(f(day).toFixed(2));
+            rateData.push(fPrime(day).toFixed(3));
+        }
+
+        // --- CHARTJS CONFIGURATION ---
+        const ctx = document.getElementById('growthChart').getContext('2d');
+        
+        const growthChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: days,
+                datasets: [
+                    {
+                        label: 'Bunch Weight (f(x) in kg)',
+                        data: weightData,
+                        borderColor: '#059669',
+                        backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                        yAxisID: 'yWeight',
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointHoverRadius: 7
+                    },
+                    {
+                        label: 'Growth Rate (f\'(x) in kg/day)',
+                        data: rateData,
+                        borderColor: '#2563eb',
+                        backgroundColor: 'transparent',
+                        borderDash: [5, 5],
+                        yAxisID: 'yRate',
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointHoverRadius: 7
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Days After Flowering (Anthesis)',
+                            font: { weight: 'bold' }
+                        }
+                    },
+                    yWeight: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Total Weight (kg)',
+                            font: { weight: 'bold', color: '#059669' }
+                        },
+                        min: 0,
+                        max: 28
+                    },
+                    yRate: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Rate of Change (kg/day)',
+                            font: { weight: 'bold', color: '#2563eb' }
+                        },
+                        min: 0,
+                        max: 0.5,
+                        grid: {
+                            drawOnChartArea: false, // only want the grid lines for one axis
+                        },
+                    },
+                },
+                // Triggered when user clicks anywhere on the canvas
+                onClick: (e) => {
+                    const points = growthChart.getElementsAtEventForMode(e, 'index', { intersect: false }, true);
+                    
+                    if (points.length > 0) {
+                        const index = points[0].index;
+                        const targetDay = days[index];
+                        
+                        updateAnalysisPanel(targetDay);
+                    }
+                }
+            }
+        });
+
+        // --- INTERACTIVE PANEL UPDATE LOGIC ---
+        function updateAnalysisPanel(day) {
+            const currentWeight = f(day);
+            const currentRate = fPrime(day);
+
+            // Toggle UI elements
+            document.getElementById('instructionPrompt').classList.add('hidden');
+            document.getElementById('dataMetrics').classList.remove('hidden');
+            document.getElementById('laymanExplanation').classList.remove('hidden');
+
+            // Inject core data strings
+            document.getElementById('metricDay').innerText = `Day ${day}`;
+            document.getElementById('metricWeight').innerText = `${currentWeight.toFixed(2)} kg`;
+            document.getElementById('metricRate').innerText = `${currentRate.toFixed(3)} kg per day`;
+
+            // Dynamic Bio-layman generation logic based on timeline location
+            let explanation = "";
+            if (day < 50) {
+                explanation = `The bunch is in its lag phase. Cells are dividing internally, but weight gain is minimal (${currentRate.toFixed(3)} kg/day). Harvesting or major feeding right now yields little value.`;
+            } else if (day >= 50 && day <= 100) {
+                if (day >= 70 && day <= 80) {
+                    explanation = `🔥 **Peak Efficiency!** At Day ${day}, the fruit is at its curve inflection point. The derivative is maximized. The bunch is putting on a massive ${currentRate.toFixed(3)} kg every single day due to active oil synthesis.`;
+                } else {
+                    explanation = `The plant is in its rapid exponential growth window. The derivative is very high, meaning fertilizer interventions here intensely push bunch sizing.`;
+                }
+            } else {
+                explanation = `The bunch growth is hitting its asymptote ($L=25\\text{kg}$). The derivative is dropping close to zero (${currentRate.toFixed(3)} kg/day), meaning growth has stopped. The fruit is ripe, sugars are locked, and it is ready for the harvesting hook.`;
+            }
+
+            document.getElementById('explanationText').innerHTML = explanation;
+        }
+    </script>
+</body>
+</html>
